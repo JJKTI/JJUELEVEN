@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2인용 핑퐁 게임</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+            display: block;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="pong" width="800" height="600"></canvas>
+
+    <script>
+        const canvas = document.getElementById("pong");
+        const context = canvas.getContext("2d");
+
+        // 패들, 공, 스코어 초기화
+        const paddleWidth = 10, paddleHeight = 180;
+        const paddleSpeed = 8;
+        const ballSize = 20;
+        const leftPaddle = { x: 0, y: canvas.height / 2 - paddleHeight / 2, width: paddleWidth, height: paddleHeight, color: "blue" };
+        const rightPaddle = { x: canvas.width - paddleWidth, y: canvas.height / 2 - paddleHeight / 2, width: paddleWidth, height: paddleHeight, color: "red" };
+        const ball = { x: canvas.width / 2 - ballSize / 2, y: canvas.height / 2 - ballSize / 2, size: ballSize, speedX: 4, speedY: 4, color: "green" };
+
+        let leftScore = 0;
+        let rightScore = 0;
+
+        // 스코어 표시 함수
+        function drawScore() {
+            context.font = "30px Arial";
+            context.fillText(leftScore, canvas.width / 4, 50);
+            context.fillText(rightScore, 3 * canvas.width / 4, 50);
+        }
+
+        // 그리기 함수
+        function drawRect(x, y, width, height, color) {
+            context.fillStyle = color;
+            context.fillRect(x, y, width, height);
+        }
+
+        function drawBall(x, y, size, color) {
+            context.fillStyle = color;
+            context.beginPath();
+            context.arc(x, y, size / 2, 0, Math.PI * 2);
+            context.closePath();
+            context.fill();
+        }
+
+        function draw() {
+            // 캔버스 지우기
+            context.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 패들 그리기
+            drawRect(leftPaddle.x, leftPaddle.y, leftPaddle.width, leftPaddle.height, leftPaddle.color);
+            drawRect(rightPaddle.x, rightPaddle.y, rightPaddle.width, rightPaddle.height, rightPaddle.color);
+
+            // 공 그리기
+            drawBall(ball.x, ball.y, ball.size, ball.color);
+
+            // 스코어 표시
+            drawScore();
+        }
+
+        // 이벤트 리스너 등록
+        document.addEventListener("keydown", function(event) {
+            switch(event.key) {
+                case "w":
+                    if (leftPaddle.y - paddleSpeed >= 0) {
+                        leftPaddle.y -= paddleSpeed;
+                    }
+                    break;
+                case "s":
+                    if (leftPaddle.y + paddleSpeed <= canvas.height - leftPaddle.height) {
+                        leftPaddle.y += paddleSpeed;
+                    }
+                    break;
+                case "ArrowUp":
+                    if (rightPaddle.y - paddleSpeed >= 0) {
+                        rightPaddle.y -= paddleSpeed;
+                    }
+                    break;
+                case "ArrowDown":
+                    if (rightPaddle.y + paddleSpeed <= canvas.height - rightPaddle.height) {
+                        rightPaddle.y += paddleSpeed;
+                    }
+                    break;
+            }
+        });
+
+        // 공 초기화 함수
+        function resetBall() {
+            ball.x = canvas.width / 2 - ballSize / 2;
+            ball.y = canvas.height / 2 - ballSize / 2;
+            ball.speedX = -ball.speedX;
+        }
+
+        // 게임 루프 함수
+        function gameLoop() {
+            draw();
+
+            // 공 이동
+            ball.x += ball.speedX;
+            ball.y += ball.speedY;
+
+            // 공과 패들 충돌 체크
+            if (
+                ball.x <= leftPaddle.x + leftPaddle.width &&
+                ball.y + ball.size >= leftPaddle.y &&
+                ball.y <= leftPaddle.y + leftPaddle.height
+            ) {
+                ball.speedX = -ball.speedX;
+            }
+
+            if (
+                ball.x + ball.size >= rightPaddle.x &&
+                ball.y + ball.size >= rightPaddle.y &&
+                ball.y <= rightPaddle.y + rightPaddle.height
+            ) {
+                ball.speedX = -ball.speedX;
+            }
+
+            // 화면 밖으로 나갔을 때 게임 종료
+            if (ball.x <= 0 || ball.x + ball.size >= canvas.width) {
+                if (ball.x <= 0) {
+                    rightScore++;
+                } else {
+                    leftScore++;
+                }
+                resetBall();
+            }
+
+            // 공의 상하 경계 체크
+            if (ball.y <= 0 || ball.y + ball.size >= canvas.height) {
+                ball.speedY = -ball.speedY;
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // 게임 시작
+        gameLoop();
+    </script>
+</body>
+</html>
